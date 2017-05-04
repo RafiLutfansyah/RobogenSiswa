@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "373091539046",
+    "firebase_url": "https://robogensiswa.firebaseio.com",
+    "project_id": "robogensiswa",
+    "storage_bucket": "robogensiswa.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:373091539046:android:8622eecde4c3d355",
+        "android_client_info": {
+          "package_name": "com.rafilutfansyah.robogensiswa"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "373091539046-567id4sfie48uagnqv0dvihq85lcv4v0.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.rafilutfansyah.robogensiswa",
+            "certificate_hash": "928b02f96984b1cabcf18528e7849bc1e8f64bfc"
+          }
+        },
+        {
+          "client_id": "373091539046-3brnguu78l2k9j9uplajkn5tk42n21eo.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBaNjwNrD9jTGrFVTKTZWw1hYphBb6PsKo"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "373091539046-3brnguu78l2k9j9uplajkn5tk42n21eo.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
