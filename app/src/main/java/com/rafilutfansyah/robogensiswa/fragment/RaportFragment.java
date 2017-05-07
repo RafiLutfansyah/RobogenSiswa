@@ -65,7 +65,7 @@ public class RaportFragment extends Fragment {
         layoutManager = new LinearLayoutManager(context);
         recyclerView.setLayoutManager(layoutManager);
         raports = new ArrayList<>();
-        adapter = new RaportRecyclerViewAdapter(raports);
+        adapter = new RaportRecyclerViewAdapter(context, raports);
         recyclerView.setAdapter(adapter);
 
         recyclerView.addOnItemTouchListener(

@@ -5,10 +5,14 @@ import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+import android.support.design.widget.CollapsingToolbarLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.design.widget.TabLayout;
+import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
+import android.util.Log;
 import android.view.View;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
@@ -22,6 +26,11 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonArrayRequest;
+import com.android.volley.toolbox.Volley;
 import com.google.android.gms.auth.api.Auth;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.common.ConnectionResult;
@@ -37,33 +46,48 @@ import com.rafilutfansyah.robogensiswa.adapter.ViewPagerAdapter;
 import com.rafilutfansyah.robogensiswa.fragment.NewsFragment;
 import com.rafilutfansyah.robogensiswa.fragment.RaportFragment;
 import com.squareup.picasso.Picasso;
+import com.squareup.picasso.Target;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 public class MainActivity extends AppCompatActivity {
 
     Toolbar toolbar;
     TabLayout tabLayout;
     ViewPager viewPager;
+    FloatingActionButton fab;
 
     private NavigationView navigationView;
     private View navHeader;
-    DrawerLayout drawerLayout;
+    private DrawerLayout drawer;
+    private ActionBarDrawerToggle toggle;
 
-    private TextView nama,email;
-    private ImageView profilePhoto;
+    private ImageView imagePhoto;
+    private TextView textName, textEmail;
+
+    private Uri photoUrl;
+    private String name, email, uid, providerId;
 
     private GoogleApiClient mGoogleApiClient;
     private FirebaseAuth mAuth;
     private FirebaseAuth.AuthStateListener mAuthListener;
     private FirebaseUser user;
 
+    SharedPreferences pref;
+    SharedPreferences.Editor editor;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+        getSupportActionBar().setTitle("RoboGen Robotics School");
+        getSupportActionBar().setSubtitle("Robotic for the Genius Generation");
 
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
+        fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -77,14 +101,30 @@ public class MainActivity extends AppCompatActivity {
         tabLayout = (TabLayout) findViewById(R.id.tab_layout);
         tabLayout.setupWithViewPager(viewPager);
 
-        drawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
+        drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        toggle = new ActionBarDrawerToggle(
+                this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+        drawer.addDrawerListener(toggle);
+        toggle.syncState();
+
+        pref = getApplicationContext().getSharedPreferences("session", 0);
+        editor = pref.edit();
+
         navigationView = (NavigationView) findViewById(R.id.nav_view);
         setNavigationView();
-
         navHeader = navigationView.getHeaderView(0);
-        nama = (TextView) navHeader.findViewById(R.id.nav_header_nama);
-        email = (TextView) navHeader.findViewById(R.id.nav_header_email);
-        profilePhoto = (ImageView) navHeader.findViewById(R.id.nav_header_photo);
+        textName = (TextView) navHeader.findViewById(R.id.nav_header_nama);
+        textEmail = (TextView) navHeader.findViewById(R.id.nav_header_email);
+        imagePhoto = (ImageView) navHeader.findViewById(R.id.nav_header_photo);
+        navHeader.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(new Intent(MainActivity.this, ProfileActivity.class));
+            }
+        });
+        textName.setText(pref.getString("nama", null));
+
+        mAuth = FirebaseAuth.getInstance();
 
         // Configure Google Sign In
         GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
@@ -102,64 +142,33 @@ public class MainActivity extends AppCompatActivity {
                 .addApi(Auth.GOOGLE_SIGN_IN_API, gso)
                 .build();
 
-        //get firebase auth instance
-        mAuth = FirebaseAuth.getInstance();
-
-        if (mAuth.getCurrentUser() != null) {
-            //get current user
-            FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        user = mAuth.getCurrentUser();
+        if (user != null) {
+            // User is signed in
             for (UserInfo profile : user.getProviderData()) {
-                // Name, email address, and profile photo Url
-                String providerId = profile.getProviderId();
-                // UID specific to the provider
-                String uid = profile.getUid();
-                // Name, email address, and profile photo Url
-                String name = profile.getDisplayName();
-                String getemail = user.getEmail();
-                Uri photoUrl = profile.getPhotoUrl();
+                // Id of the provider (ex: google.com)
+                providerId = profile.getProviderId();
 
-                Picasso.with(MainActivity.this).load(photoUrl).transform(new CircleTransform()).into(profilePhoto);
-                nama.setText(name);
-                email.setText(getemail);
+                // UID specific to the provider
+                uid = profile.getUid();
+
+                // Name, email address, and profile photo Url
+                name = profile.getDisplayName();
+                email = user.getEmail();
+                photoUrl = profile.getPhotoUrl();
+
+                Picasso.with(MainActivity.this).load(photoUrl).transform(new CircleTransform()).into(imagePhoto);
+                //textName.setText(name);
+                textEmail.setText(email);
             }
-        }
-        else  {
+        } else {
+            // User is signed out
             startActivity(new Intent(MainActivity.this, LoginActivity.class));
             finish();
         }
-
-        mAuthListener = new FirebaseAuth.AuthStateListener() {
-            @Override
-            public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
-                FirebaseUser user = firebaseAuth.getCurrentUser();
-                if (user == null) {
-                    // user auth state is changed - user is null
-                    // launch login activity
-                    startActivity(new Intent(MainActivity.this, LoginActivity.class));
-                }
-            }
-        };
     }
 
     private void setNavigationView() {
-        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
-                this, drawerLayout, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close) {
-            @Override
-            public void onDrawerOpened(View drawerView) {
-                Snackbar.make(drawerView, "onDrawerOpened", Snackbar.LENGTH_SHORT)
-                        .setAction("Action", null).show();
-                super.onDrawerOpened(drawerView);
-            }
-
-            public void onDrawerClosed(View drawerView) {
-                Snackbar.make(drawerView, "onDrawerClosed", Snackbar.LENGTH_SHORT)
-                        .setAction("Action", null).show();
-                super.onDrawerClosed(drawerView);
-            }
-        };
-        drawerLayout.addDrawerListener(toggle);
-        toggle.syncState();
-
         navigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
             @Override
             public boolean onNavigationItemSelected(@NonNull MenuItem item) {
@@ -185,9 +194,20 @@ public class MainActivity extends AppCompatActivity {
                         FirebaseAuth.getInstance().signOut();
                         startActivity(new Intent(MainActivity.this, LoginActivity.class));
                         finish();
+                        break;
+                    case R.id.nav_share:
+                        startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("http://www.myrobottime.com/")));
+                        break;
                 }
 
-                drawerLayout.closeDrawer(GravityCompat.START);
+                if (item.isChecked()) {
+                    item.setChecked(false);
+                } else {
+                    item.setChecked(true);
+                }
+                item.setChecked(true);
+
+                drawer.closeDrawer(GravityCompat.START);
                 return true;
             }
         });
@@ -195,8 +215,8 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
-        if (drawerLayout.isDrawerOpen(GravityCompat.START)) {
-            drawerLayout.closeDrawer(GravityCompat.START);
+        if (drawer.isDrawerOpen(GravityCompat.START)) {
+            drawer.closeDrawer(GravityCompat.START);
         } else {
             super.onBackPressed();
         }
