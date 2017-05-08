@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.GestureDetector;
@@ -44,6 +45,8 @@ public class RaportFragment extends Fragment {
     private RecyclerView.LayoutManager layoutManager;
 
     Context context;
+
+    SwipeRefreshLayout swipeRefresh;
 
     public RaportFragment() {
 
@@ -137,6 +140,53 @@ public class RaportFragment extends Fragment {
             }
         });
         queue.add(request);
+
+        swipeRefresh = (SwipeRefreshLayout) view.findViewById(R.id.swipe_refresh);
+        swipeRefresh.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                RequestQueue queue = Volley.newRequestQueue(context);
+                String url ="https://robogen.000webhostapp.com/API/Raport?username="+username;
+                JsonArrayRequest request = new JsonArrayRequest(url,
+                        new Response.Listener<JSONArray>() {
+                            @Override
+                            public void onResponse(JSONArray response) {
+                                raports.clear();
+                                for (int i = 0; i < response.length(); i++) {
+                                    try {
+                                        JSONObject obj = response.getJSONObject(i);
+                                        RaportModel raport = new RaportModel();
+                                        raport.setIdRaport(obj.getString("id_raport"));
+                                        raport.setUsername(obj.getString("username"));
+                                        raport.setHari(obj.getString("hari"));
+                                        raport.setTanggal(obj.getString("tanggal"));
+                                        raport.setJamMasuk(obj.getString("jam_masuk"));
+                                        raport.setMateri(obj.getString("materi"));
+                                        raport.setFoto(obj.getString("foto"));
+                                        raport.setNilaiMerakit(obj.getInt("nilai_merakit"));
+                                        raport.setNilaiMandiri(obj.getInt("nilai_mandiri"));
+                                        raport.setNilaiKreativitas(obj.getInt("nilai_kreativitas"));
+                                        raport.setNilaiTotal(obj.getDouble("nilai_total"));
+                                        raport.setGrade(obj.getString("grade"));
+                                        raport.setKeterangan(obj.getString("keterangan"));
+                                        raports.add(raport);
+                                        adapter.notifyDataSetChanged();
+                                    } catch (JSONException e) {
+                                        e.printStackTrace();
+                                    }
+
+                                }
+                                swipeRefresh.setRefreshing(false);
+                            }
+                        }, new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        Toast.makeText(context, "Error!", Toast.LENGTH_SHORT).show();
+                    }
+                });
+                queue.add(request);
+            }
+        });
 
         return view;
     }

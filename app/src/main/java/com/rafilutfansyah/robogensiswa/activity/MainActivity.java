@@ -123,6 +123,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
         textName.setText(pref.getString("nama", null));
+        Picasso.with(MainActivity.this).load("https://robogen.000webhostapp.com/codeigniter/uploads/"+pref.getString("photoUrl", null)).transform(new CircleTransform()).into(imagePhoto);
 
         mAuth = FirebaseAuth.getInstance();
 
@@ -157,7 +158,7 @@ public class MainActivity extends AppCompatActivity {
                 email = user.getEmail();
                 photoUrl = profile.getPhotoUrl();
 
-                Picasso.with(MainActivity.this).load(photoUrl).transform(new CircleTransform()).into(imagePhoto);
+                //Picasso.with(MainActivity.this).load(photoUrl).transform(new CircleTransform()).into(imagePhoto);
                 //textName.setText(name);
                 textEmail.setText(email);
             }
@@ -190,7 +191,6 @@ public class MainActivity extends AppCompatActivity {
                                     public void onResult(@NonNull Status status) {
                                     }
                                 });
-                        FirebaseAuth.getInstance().signOut();
                         FirebaseAuth.getInstance().signOut();
                         startActivity(new Intent(MainActivity.this, LoginActivity.class));
                         finish();

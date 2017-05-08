@@ -179,6 +179,19 @@ public class LoginActivity extends AppCompatActivity {
                                             e.printStackTrace();
                                         }
                                     }
+                                    if(!email.equals(emailDatabase)) {
+                                        SharedPreferences pref = getApplicationContext().getSharedPreferences("session", 0);
+                                        SharedPreferences.Editor editor = pref.edit();
+                                        editor.clear();
+                                        editor.commit();
+                                        Auth.GoogleSignInApi.signOut(mGoogleApiClient).setResultCallback(
+                                                new ResultCallback<Status>() {
+                                                    @Override
+                                                    public void onResult(@NonNull Status status) {
+                                                    }
+                                                });
+                                        FirebaseAuth.getInstance().signOut();
+                                    }
                                 }
                             }, new Response.ErrorListener() {
                         @Override
