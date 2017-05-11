@@ -55,6 +55,7 @@ public class RaportRecyclerViewAdapter extends RecyclerView.Adapter<RaportRecycl
                 .into(holder.imageView);
         holder.textMateri.setText(raport.getMateri());
         holder.textHariTanggal.setText(raport.getHari()+", "+raport.getTanggal());
+        holder.textGrade.setText(raport.getGrade());
     }
 
     @Override

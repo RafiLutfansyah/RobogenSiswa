@@ -108,6 +108,59 @@ public class LoginActivity extends AppCompatActivity {
 
         siswa = new SiswaModel();
 
+        buttonSignIn = (Button) findViewById(R.id.button_sign_in);
+        buttonSignIn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                RequestQueue queue = Volley.newRequestQueue(LoginActivity.this);
+                String url ="https://robogen.000webhostapp.com/API/siswa?username="+textUsername.getText();
+
+                JsonArrayRequest request = new JsonArrayRequest(url,
+                        new Response.Listener<JSONArray>() {
+                            @Override
+                            public void onResponse(JSONArray response) {
+                                try {
+
+                                    JSONObject obj = response.getJSONObject(0);
+
+                                    siswa.setEmail(obj.getString("email"));
+                                    siswa.setUsername(obj.getString("username"));
+                                    siswa.setPassword(obj.getString("password"));
+                                    siswa.setNama(obj.getString("nama"));
+                                    siswa.setFoto(obj.getString("foto"));
+
+                                    emailDatabase = siswa.getEmail();
+                                    usernameDatabase = siswa.getUsername();
+                                    passwordDatabase = siswa.getPassword();
+                                    namaDatabase = siswa.getNama();
+                                    photoUrlDatabase = siswa.getFoto();
+
+                                    if(textUsername.getText().toString().equals(usernameDatabase) && textPassword.getText().toString().equals(passwordDatabase)) {
+                                        editor.putString("username", usernameDatabase);
+                                        editor.putString("email", emailDatabase);
+                                        editor.putString("nama", namaDatabase);
+                                        editor.putString("photoUrl", photoUrlDatabase);
+                                        editor.putString("password", passwordDatabase);
+                                        editor.commit();
+                                        startActivity(new Intent(LoginActivity.this, MainActivity.class));
+                                        finish();
+                                    } else {
+                                        Toast.makeText(LoginActivity.this, "Username & Password Salah!", Toast.LENGTH_SHORT).show();
+                                    }
+                                } catch (JSONException e) {
+                                    e.printStackTrace();
+                                }
+                            }
+                        }, new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        Toast.makeText(LoginActivity.this, "Gagal Login!", Toast.LENGTH_SHORT).show();
+                    }
+                });
+                queue.add(request);
+            }
+        });
+
         signInButton = (SignInButton) findViewById(R.id.sign_in_button);
         signInButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -162,10 +215,7 @@ public class LoginActivity extends AppCompatActivity {
                                             namaDatabase = siswa.getNama();
                                             photoUrlDatabase = siswa.getFoto();
 
-
                                             if(email.equals(emailDatabase)) {
-                                                SharedPreferences pref = getApplicationContext().getSharedPreferences("session", 0);
-                                                SharedPreferences.Editor editor = pref.edit();
                                                 editor.putString("username", usernameDatabase);
                                                 editor.putString("email", emailDatabase);
                                                 editor.putString("nama", namaDatabase);
@@ -180,8 +230,6 @@ public class LoginActivity extends AppCompatActivity {
                                         }
                                     }
                                     if(!email.equals(emailDatabase)) {
-                                        SharedPreferences pref = getApplicationContext().getSharedPreferences("session", 0);
-                                        SharedPreferences.Editor editor = pref.edit();
                                         editor.clear();
                                         editor.commit();
                                         Auth.GoogleSignInApi.signOut(mGoogleApiClient).setResultCallback(
@@ -196,7 +244,16 @@ public class LoginActivity extends AppCompatActivity {
                             }, new Response.ErrorListener() {
                         @Override
                         public void onErrorResponse(VolleyError error) {
-                            Toast.makeText(LoginActivity.this, "Volley Error!", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(LoginActivity.this, "Gagal Login!", Toast.LENGTH_SHORT).show();
+                            editor.clear();
+                            editor.commit();
+                            Auth.GoogleSignInApi.signOut(mGoogleApiClient).setResultCallback(
+                                    new ResultCallback<Status>() {
+                                        @Override
+                                        public void onResult(@NonNull Status status) {
+                                        }
+                                    });
+                            FirebaseAuth.getInstance().signOut();
                         }
                     });
                     queue.add(request);

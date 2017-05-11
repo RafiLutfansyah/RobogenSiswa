@@ -20,4 +20,11 @@
         completions."
     </string>
     <string name="title_activity_profile">ProfileActivity</string>
+    <string name="banner_ad_unit_id">ca-app-pub-3429781998524767/8228640139</string>
+
+    <string name="title_activity_iklan_interstitial">iklanInterstitialActivity</string>
+    <string name="dummy_button">Dummy Button</string>
+    <string name="dummy_content">DUMMY\nCONTENT</string>
+
+    <string name="title_activity_fullscreen">FullscreenActivity</string>
 </resources>

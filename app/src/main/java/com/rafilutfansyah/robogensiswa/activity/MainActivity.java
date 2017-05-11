@@ -31,6 +31,10 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.Volley;
+import com.google.android.gms.ads.AdListener;
+import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.AdView;
+import com.google.android.gms.ads.MobileAds;
 import com.google.android.gms.auth.api.Auth;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.common.ConnectionResult;
@@ -43,6 +47,7 @@ import com.google.firebase.auth.UserInfo;
 import com.rafilutfansyah.robogensiswa.R;
 import com.rafilutfansyah.robogensiswa.adapter.CircleTransform;
 import com.rafilutfansyah.robogensiswa.adapter.ViewPagerAdapter;
+import com.rafilutfansyah.robogensiswa.fragment.ArticlesFragment;
 import com.rafilutfansyah.robogensiswa.fragment.NewsFragment;
 import com.rafilutfansyah.robogensiswa.fragment.RaportFragment;
 import com.squareup.picasso.Picasso;
@@ -78,6 +83,8 @@ public class MainActivity extends AppCompatActivity {
     SharedPreferences pref;
     SharedPreferences.Editor editor;
 
+    private AdView mAdView;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -86,6 +93,46 @@ public class MainActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
         getSupportActionBar().setTitle("RoboGen Robotics School");
         getSupportActionBar().setSubtitle("Robotic for the Genius Generation");
+
+        // Initialize the Mobile Ads SDK.
+        MobileAds.initialize(this, "ca-app-pub-3429781998524767~6751906939");
+        // Gets the ad view defined in layout/ad_fragment.xml with ad unit ID set in
+        // values/strings.xml.
+        mAdView = (AdView) findViewById(R.id.ad_view);
+        // Create an ad request. Check your logcat output for the hashed device ID to
+        // get test ads on a physical device. e.g.
+        // "Use AdRequest.Builder.addTestDevice("ABCDEF012345") to get test ads on this device."
+        AdRequest adRequest = new AdRequest.Builder()
+                //.addTestDevice(AdRequest.DEVICE_ID_EMULATOR)
+                .build();
+        // Start loading the ad in the background.
+        mAdView.loadAd(adRequest);
+        mAdView.setAdListener(new AdListener() {
+            @Override
+            public void onAdLoaded() {
+                Toast.makeText(getApplicationContext(), "Ad is loaded!", Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void onAdClosed() {
+                Toast.makeText(getApplicationContext(), "Ad is closed!", Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void onAdFailedToLoad(int errorCode) {
+                Toast.makeText(getApplicationContext(), "Ad failed to load! error code: " + errorCode, Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void onAdLeftApplication() {
+                Toast.makeText(getApplicationContext(), "Ad left application!", Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void onAdOpened() {
+                Toast.makeText(getApplicationContext(), "Ad is opened!", Toast.LENGTH_SHORT).show();
+            }
+        });
 
         fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
@@ -119,10 +166,12 @@ public class MainActivity extends AppCompatActivity {
         navHeader.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                drawer.closeDrawer(GravityCompat.START);
                 startActivity(new Intent(MainActivity.this, ProfileActivity.class));
             }
         });
         textName.setText(pref.getString("nama", null));
+        textEmail.setText(pref.getString("email", null));
         Picasso.with(MainActivity.this).load("https://robogen.000webhostapp.com/codeigniter/uploads/"+pref.getString("photoUrl", null)).transform(new CircleTransform()).into(imagePhoto);
 
         mAuth = FirebaseAuth.getInstance();
@@ -143,6 +192,23 @@ public class MainActivity extends AppCompatActivity {
                 .addApi(Auth.GOOGLE_SIGN_IN_API, gso)
                 .build();
 
+        if(pref.getString("username", null) != null) {
+            // User is signed in
+        } else {
+            // User is signed out
+            editor.clear();
+            editor.commit();
+            Auth.GoogleSignInApi.signOut(mGoogleApiClient).setResultCallback(
+                    new ResultCallback<Status>() {
+                        @Override
+                        public void onResult(@NonNull Status status) {
+                        }
+                    });
+            FirebaseAuth.getInstance().signOut();
+            startActivity(new Intent(MainActivity.this, LoginActivity.class));
+            finish();
+        }
+
         user = mAuth.getCurrentUser();
         if (user != null) {
             // User is signed in
@@ -160,12 +226,12 @@ public class MainActivity extends AppCompatActivity {
 
                 //Picasso.with(MainActivity.this).load(photoUrl).transform(new CircleTransform()).into(imagePhoto);
                 //textName.setText(name);
-                textEmail.setText(email);
+                //textEmail.setText(email);
             }
         } else {
             // User is signed out
-            startActivity(new Intent(MainActivity.this, LoginActivity.class));
-            finish();
+            //startActivity(new Intent(MainActivity.this, LoginActivity.class));
+            //finish();
         }
     }
 
@@ -181,8 +247,6 @@ public class MainActivity extends AppCompatActivity {
                         viewPager.setCurrentItem(1);
                         break;
                     case R.id.nav_send:
-                        SharedPreferences pref = getApplicationContext().getSharedPreferences("session", 0);
-                        SharedPreferences.Editor editor = pref.edit();
                         editor.clear();
                         editor.commit();
                         Auth.GoogleSignInApi.signOut(mGoogleApiClient).setResultCallback(
@@ -222,10 +286,38 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    /** Called when leaving the activity */
+    @Override
+    public void onPause() {
+        if (mAdView != null) {
+            mAdView.pause();
+        }
+        super.onPause();
+    }
+
+    /** Called when returning to the activity */
+    @Override
+    public void onResume() {
+        super.onResume();
+        if (mAdView != null) {
+            mAdView.resume();
+        }
+    }
+
+    /** Called before the activity is destroyed */
+    @Override
+    public void onDestroy() {
+        if (mAdView != null) {
+            mAdView.destroy();
+        }
+        super.onDestroy();
+    }
+
     private void setupViewPager(ViewPager viewPager) {
         ViewPagerAdapter adapter = new ViewPagerAdapter(getSupportFragmentManager());
         adapter.addFragment(new RaportFragment(), "Raport");
         adapter.addFragment(new NewsFragment(),"News");
+        adapter.addFragment(new ArticlesFragment(), "Articles");
         viewPager.setAdapter(adapter);
     }
 

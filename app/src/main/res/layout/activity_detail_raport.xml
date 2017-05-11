@@ -32,7 +32,7 @@
                 android:layout_height="?attr/actionBarSize"
                 android:elevation="4dp"
                 app:layout_collapseMode="pin"
-                app:popupTheme="@style/AppTheme.PopupOverlay" />
+                app:popupTheme="@style/AppTheme.PopupOverlay"/>
 
         </android.support.design.widget.CollapsingToolbarLayout>
     </android.support.design.widget.AppBarLayout>
@@ -299,7 +299,7 @@
                         android:focusable="true"
                         android:focusableInTouchMode="true">
 
-                        <android.support.v7.widget.AppCompatEditText
+                        <android.support.design.widget.TextInputEditText
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:hint="Masukan Komentar"/>

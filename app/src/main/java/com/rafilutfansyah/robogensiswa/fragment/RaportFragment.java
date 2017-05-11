@@ -20,6 +20,8 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.Volley;
+import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.AdView;
 import com.rafilutfansyah.robogensiswa.activity.DetailRaportActivity;
 import com.rafilutfansyah.robogensiswa.R;
 import com.rafilutfansyah.robogensiswa.adapter.RaportRecyclerViewAdapter;
@@ -37,16 +39,15 @@ import java.util.List;
  */
 public class RaportFragment extends Fragment {
 
-    List<RaportModel> raports;
-    String username;
+    private Context context;
+    private List<RaportModel> raports;
+    private String username;
+
+    private SwipeRefreshLayout swipeRefresh;
 
     private RecyclerView recyclerView;
     private RaportRecyclerViewAdapter adapter;
     private RecyclerView.LayoutManager layoutManager;
-
-    Context context;
-
-    SwipeRefreshLayout swipeRefresh;
 
     public RaportFragment() {
 
@@ -58,7 +59,6 @@ public class RaportFragment extends Fragment {
         this.context = context;
     }
 
-
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_raport, container, false);
@@ -68,7 +68,7 @@ public class RaportFragment extends Fragment {
         layoutManager = new LinearLayoutManager(context);
         recyclerView.setLayoutManager(layoutManager);
         raports = new ArrayList<>();
-        adapter = new RaportRecyclerViewAdapter(context, raports);
+        adapter = new RaportRecyclerViewAdapter(getActivity(), raports);
         recyclerView.setAdapter(adapter);
 
         recyclerView.addOnItemTouchListener(
@@ -182,6 +182,7 @@ public class RaportFragment extends Fragment {
                     @Override
                     public void onErrorResponse(VolleyError error) {
                         Toast.makeText(context, "Error!", Toast.LENGTH_SHORT).show();
+                        swipeRefresh.setRefreshing(false);
                     }
                 });
                 queue.add(request);
