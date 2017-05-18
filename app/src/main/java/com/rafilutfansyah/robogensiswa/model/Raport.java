@@ -4,7 +4,7 @@ package com.rafilutfansyah.robogensiswa.model;
  * Created by Rafi Lutfansyah on 29/04/2017.
  */
 
-public class RaportModel {
+public class Raport {
 
     private String idRaport, username, materi, foto, grade, keterangan, hari, tanggal, jamMasuk;
 
@@ -12,7 +12,7 @@ public class RaportModel {
 
     private Double nilaiTotal;
 
-    public RaportModel() {
+    public Raport() {
         this.idRaport = idRaport;
         this.username = username;
         this.materi = materi;

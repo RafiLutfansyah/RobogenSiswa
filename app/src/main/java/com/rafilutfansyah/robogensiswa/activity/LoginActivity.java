@@ -1,6 +1,5 @@
 package com.rafilutfansyah.robogensiswa.activity;
 
-import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
@@ -37,7 +36,7 @@ import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.GoogleAuthProvider;
 import com.google.firebase.auth.UserInfo;
 import com.rafilutfansyah.robogensiswa.R;
-import com.rafilutfansyah.robogensiswa.model.SiswaModel;
+import com.rafilutfansyah.robogensiswa.model.Siswa;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -45,7 +44,7 @@ import org.json.JSONObject;
 
 public class LoginActivity extends AppCompatActivity {
 
-    private EditText textUsername, textPassword;
+    private EditText etUsername, etPassword;
 
     private GoogleApiClient mGoogleApiClient;
     private FirebaseAuth mAuth;
@@ -57,11 +56,11 @@ public class LoginActivity extends AppCompatActivity {
     private SignInButton signInButton;
     private Button buttonSignIn;
 
-    private SiswaModel siswa;
+    private Siswa siswa;
 
     private Uri photoUrl;
     private String name, email, uid, providerId;
-    private String emailDatabase, usernameDatabase, passwordDatabase, namaDatabase, photoUrlDatabase;
+    private String username, password, namaLengkap, namaPanggilan, kelasRobotik, tanggalLahir, urlFoto, alamat, namaSekolah, kelasSekolah, namaAyah, namaIbu, noTelp, emailDatabase, hariBelajar, jamBelajar, tanggalMendaftar;
 
     SharedPreferences pref;
     SharedPreferences.Editor editor;
@@ -73,8 +72,8 @@ public class LoginActivity extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        textUsername = (EditText) findViewById(R.id.text_email);
-        textPassword = (EditText) findViewById(R.id.text_password);
+        etUsername = (EditText) findViewById(R.id.text_email);
+        etPassword = (EditText) findViewById(R.id.text_password);
 
         pref = getApplicationContext().getSharedPreferences("session", 0);
         editor = pref.edit();
@@ -106,14 +105,14 @@ public class LoginActivity extends AppCompatActivity {
                 .addApi(Auth.GOOGLE_SIGN_IN_API, gso)
                 .build();
 
-        siswa = new SiswaModel();
+        siswa = new Siswa();
 
         buttonSignIn = (Button) findViewById(R.id.button_sign_in);
         buttonSignIn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 RequestQueue queue = Volley.newRequestQueue(LoginActivity.this);
-                String url ="https://robogen.000webhostapp.com/API/siswa?username="+textUsername.getText();
+                final String url ="https://robogen.000webhostapp.com/API/siswa?username="+etUsername.getText();
 
                 JsonArrayRequest request = new JsonArrayRequest(url,
                         new Response.Listener<JSONArray>() {
@@ -123,24 +122,48 @@ public class LoginActivity extends AppCompatActivity {
 
                                     JSONObject obj = response.getJSONObject(0);
 
-                                    siswa.setEmail(obj.getString("email"));
                                     siswa.setUsername(obj.getString("username"));
                                     siswa.setPassword(obj.getString("password"));
-                                    siswa.setNama(obj.getString("nama"));
-                                    siswa.setFoto(obj.getString("foto"));
+                                    siswa.setNamaLengkap(obj.getString("nama_lengkap"));
+                                    siswa.setNamaPanggilan(obj.getString("nama_panggilan"));
+                                    siswa.setKelasRobotik(obj.getString("kelas_robotik"));
+                                    siswa.setTanggalLahir(obj.getString("tanggal_lahir"));
+                                    siswa.setUrlFoto(obj.getString("url_foto"));
+                                    siswa.setAlamat(obj.getString("alamat"));
+                                    siswa.setNamaSekolah(obj.getString("nama_sekolah"));
+                                    siswa.setKelasSekolah(obj.getString("kelas_sekolah"));
+                                    siswa.setNamaAyah(obj.getString("nama_ayah"));
+                                    siswa.setNamaIbu(obj.getString("nama_ibu"));
+                                    siswa.setNoTelp(obj.getString("no_telp"));
+                                    siswa.setEmail(obj.getString("email"));
+                                    siswa.setHariBelajar(obj.getString("hari_belajar"));
+                                    siswa.setJamBelajar(obj.getString("jam_belajar"));
+                                    siswa.setTanggalMendaftar(obj.getString("tanggal_mendaftar"));
 
+                                    username = siswa.getUsername();
+                                    password = siswa.getPassword();
+                                    namaLengkap = siswa.getNamaLengkap();
+                                    namaPanggilan = siswa.getNamaPanggilan();
+                                    kelasRobotik = siswa.getKelasRobotik();
+                                    tanggalLahir = siswa.getTanggalLahir();
+                                    urlFoto = siswa.getUrlFoto();
+                                    alamat = siswa.getAlamat();
+                                    namaSekolah = siswa.getNamaSekolah();
+                                    kelasSekolah = siswa.getKelasSekolah();
+                                    namaAyah = siswa.getNamaAyah();
+                                    namaIbu = siswa.getNamaIbu();
+                                    noTelp = siswa.getNoTelp();
                                     emailDatabase = siswa.getEmail();
-                                    usernameDatabase = siswa.getUsername();
-                                    passwordDatabase = siswa.getPassword();
-                                    namaDatabase = siswa.getNama();
-                                    photoUrlDatabase = siswa.getFoto();
+                                    hariBelajar = siswa.getHariBelajar();
+                                    jamBelajar = siswa.getJamBelajar();
+                                    tanggalMendaftar = siswa.getTanggalMendaftar();
 
-                                    if(textUsername.getText().toString().equals(usernameDatabase) && textPassword.getText().toString().equals(passwordDatabase)) {
-                                        editor.putString("username", usernameDatabase);
+                                    if(etUsername.getText().equals(username) && etPassword.getText().equals(password)) {
+                                        editor.putString("username", username);
                                         editor.putString("email", emailDatabase);
-                                        editor.putString("nama", namaDatabase);
-                                        editor.putString("photoUrl", photoUrlDatabase);
-                                        editor.putString("password", passwordDatabase);
+                                        editor.putString("nama", namaLengkap);
+                                        editor.putString("photoUrl", urlFoto);
+                                        editor.putString("password", password);
                                         editor.commit();
                                         startActivity(new Intent(LoginActivity.this, MainActivity.class));
                                         finish();
@@ -155,6 +178,8 @@ public class LoginActivity extends AppCompatActivity {
                     @Override
                     public void onErrorResponse(VolleyError error) {
                         Toast.makeText(LoginActivity.this, "Gagal Login!", Toast.LENGTH_SHORT).show();
+                        editor.clear();
+                        editor.commit();
                     }
                 });
                 queue.add(request);
@@ -181,10 +206,8 @@ public class LoginActivity extends AppCompatActivity {
                     for (UserInfo profile : user.getProviderData()) {
                         // Id of the provider (ex: google.com)
                         providerId = profile.getProviderId();
-
                         // UID specific to the provider
                         uid = profile.getUid();
-
                         // Name, email address, and profile photo Url
                         name = profile.getDisplayName();
                         email = user.getEmail();
@@ -203,24 +226,48 @@ public class LoginActivity extends AppCompatActivity {
 
                                             JSONObject obj = response.getJSONObject(i);
 
-                                            siswa.setEmail(obj.getString("email"));
                                             siswa.setUsername(obj.getString("username"));
                                             siswa.setPassword(obj.getString("password"));
-                                            siswa.setNama(obj.getString("nama"));
-                                            siswa.setFoto(obj.getString("foto"));
+                                            siswa.setNamaLengkap(obj.getString("nama_lengkap"));
+                                            siswa.setNamaPanggilan(obj.getString("nama_panggilan"));
+                                            siswa.setKelasRobotik(obj.getString("kelas_robotik"));
+                                            siswa.setTanggalLahir(obj.getString("tanggal_lahir"));
+                                            siswa.setUrlFoto(obj.getString("url_foto"));
+                                            siswa.setAlamat(obj.getString("alamat"));
+                                            siswa.setNamaSekolah(obj.getString("nama_sekolah"));
+                                            siswa.setKelasSekolah(obj.getString("kelas_sekolah"));
+                                            siswa.setNamaAyah(obj.getString("nama_ayah"));
+                                            siswa.setNamaIbu(obj.getString("nama_ibu"));
+                                            siswa.setNoTelp(obj.getString("no_telp"));
+                                            siswa.setEmail(obj.getString("email"));
+                                            siswa.setHariBelajar(obj.getString("hari_belajar"));
+                                            siswa.setJamBelajar(obj.getString("jam_belajar"));
+                                            siswa.setTanggalMendaftar(obj.getString("tanggal_mendaftar"));
 
+                                            username = siswa.getUsername();
+                                            password = siswa.getPassword();
+                                            namaLengkap = siswa.getNamaLengkap();
+                                            namaPanggilan = siswa.getNamaPanggilan();
+                                            kelasRobotik = siswa.getKelasRobotik();
+                                            tanggalLahir = siswa.getTanggalLahir();
+                                            urlFoto = siswa.getUrlFoto();
+                                            alamat = siswa.getAlamat();
+                                            namaSekolah = siswa.getNamaSekolah();
+                                            kelasSekolah = siswa.getKelasSekolah();
+                                            namaAyah = siswa.getNamaAyah();
+                                            namaIbu = siswa.getNamaIbu();
+                                            noTelp = siswa.getNoTelp();
                                             emailDatabase = siswa.getEmail();
-                                            usernameDatabase = siswa.getUsername();
-                                            passwordDatabase = siswa.getPassword();
-                                            namaDatabase = siswa.getNama();
-                                            photoUrlDatabase = siswa.getFoto();
+                                            hariBelajar = siswa.getHariBelajar();
+                                            jamBelajar = siswa.getJamBelajar();
+                                            tanggalMendaftar = siswa.getTanggalMendaftar();
 
                                             if(email.equals(emailDatabase)) {
-                                                editor.putString("username", usernameDatabase);
+                                                editor.putString("username", username);
                                                 editor.putString("email", emailDatabase);
-                                                editor.putString("nama", namaDatabase);
-                                                editor.putString("photoUrl", photoUrlDatabase);
-                                                editor.putString("password", passwordDatabase);
+                                                editor.putString("nama", namaLengkap);
+                                                editor.putString("photoUrl", urlFoto);
+                                                editor.putString("password", password);
                                                 editor.commit();
                                                 startActivity(new Intent(LoginActivity.this, MainActivity.class));
                                                 finish();

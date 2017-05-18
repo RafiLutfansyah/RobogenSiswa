@@ -1,7 +1,6 @@
 package com.rafilutfansyah.robogensiswa.adapter;
 
 import android.content.Context;
-import android.net.Uri;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -10,8 +9,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.rafilutfansyah.robogensiswa.R;
-import com.rafilutfansyah.robogensiswa.activity.MainActivity;
-import com.rafilutfansyah.robogensiswa.model.RaportModel;
+import com.rafilutfansyah.robogensiswa.model.Raport;
 import com.squareup.picasso.Picasso;
 
 import java.util.List;
@@ -19,7 +17,7 @@ import java.util.List;
 public class RaportRecyclerViewAdapter extends RecyclerView.Adapter<RaportRecyclerViewAdapter.ViewHolder> {
 
     private Context context;
-    private List<RaportModel> raports;
+    private List<Raport> raports;
 
     public static class ViewHolder extends RecyclerView.ViewHolder{
         public ImageView imageView;
@@ -34,7 +32,7 @@ public class RaportRecyclerViewAdapter extends RecyclerView.Adapter<RaportRecycl
         }
     }
 
-    public RaportRecyclerViewAdapter(Context context,List<RaportModel> raports) {
+    public RaportRecyclerViewAdapter(Context context,List<Raport> raports) {
         this.context = context;
         this.raports = raports;
     }
@@ -48,7 +46,7 @@ public class RaportRecyclerViewAdapter extends RecyclerView.Adapter<RaportRecycl
 
     @Override
     public void onBindViewHolder(final ViewHolder holder, final int position) {
-        RaportModel raport = raports.get(position);
+        Raport raport = raports.get(position);
         Picasso.with(context).load("https://robogen.000webhostapp.com/codeigniter/uploads/"+raport.getFoto())
                 .resize(640, 480)
                 .centerCrop()

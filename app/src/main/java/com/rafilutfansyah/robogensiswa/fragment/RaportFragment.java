@@ -20,12 +20,10 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.Volley;
-import com.google.android.gms.ads.AdRequest;
-import com.google.android.gms.ads.AdView;
 import com.rafilutfansyah.robogensiswa.activity.DetailRaportActivity;
 import com.rafilutfansyah.robogensiswa.R;
 import com.rafilutfansyah.robogensiswa.adapter.RaportRecyclerViewAdapter;
-import com.rafilutfansyah.robogensiswa.model.RaportModel;
+import com.rafilutfansyah.robogensiswa.model.Raport;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -40,7 +38,7 @@ import java.util.List;
 public class RaportFragment extends Fragment {
 
     private Context context;
-    private List<RaportModel> raports;
+    private List<Raport> raports;
     private String username;
 
     private SwipeRefreshLayout swipeRefresh;
@@ -74,7 +72,7 @@ public class RaportFragment extends Fragment {
         recyclerView.addOnItemTouchListener(
                 new RecyclerItemClickListener(context, recyclerView ,new RecyclerItemClickListener.OnItemClickListener() {
                     @Override public void onItemClick(View view, int position) {
-                        RaportModel raport = raports.get(position);
+                        Raport raport = raports.get(position);
                         Intent intent = new Intent(context, DetailRaportActivity.class);
                         intent.putExtra("id_raport", raport.getIdRaport());
                         intent.putExtra("username", raport.getUsername());
@@ -111,14 +109,13 @@ public class RaportFragment extends Fragment {
                         for (int i = 0; i < response.length(); i++) {
                             try {
                                 JSONObject obj = response.getJSONObject(i);
-                                RaportModel raport = new RaportModel();
+                                Raport raport = new Raport();
                                 raport.setIdRaport(obj.getString("id_raport"));
                                 raport.setUsername(obj.getString("username"));
-                                raport.setHari(obj.getString("hari"));
-                                raport.setTanggal(obj.getString("tanggal"));
-                                raport.setJamMasuk(obj.getString("jam_masuk"));
+                                raport.setHari(obj.getString("hari_belajar"));
+                                raport.setTanggal(obj.getString("tanggal_belajar"));
                                 raport.setMateri(obj.getString("materi"));
-                                raport.setFoto(obj.getString("foto"));
+                                raport.setFoto(obj.getString("url_foto"));
                                 raport.setNilaiMerakit(obj.getInt("nilai_merakit"));
                                 raport.setNilaiMandiri(obj.getInt("nilai_mandiri"));
                                 raport.setNilaiKreativitas(obj.getInt("nilai_kreativitas"));
@@ -155,14 +152,13 @@ public class RaportFragment extends Fragment {
                                 for (int i = 0; i < response.length(); i++) {
                                     try {
                                         JSONObject obj = response.getJSONObject(i);
-                                        RaportModel raport = new RaportModel();
+                                        Raport raport = new Raport();
                                         raport.setIdRaport(obj.getString("id_raport"));
                                         raport.setUsername(obj.getString("username"));
-                                        raport.setHari(obj.getString("hari"));
-                                        raport.setTanggal(obj.getString("tanggal"));
-                                        raport.setJamMasuk(obj.getString("jam_masuk"));
+                                        raport.setHari(obj.getString("hari_belajar"));
+                                        raport.setTanggal(obj.getString("tanggal_belajar"));
                                         raport.setMateri(obj.getString("materi"));
-                                        raport.setFoto(obj.getString("foto"));
+                                        raport.setFoto(obj.getString("url_foto"));
                                         raport.setNilaiMerakit(obj.getInt("nilai_merakit"));
                                         raport.setNilaiMandiri(obj.getInt("nilai_mandiri"));
                                         raport.setNilaiKreativitas(obj.getInt("nilai_kreativitas"));

@@ -59,10 +59,10 @@ import org.json.JSONObject;
 
 public class MainActivity extends AppCompatActivity {
 
-    Toolbar toolbar;
-    TabLayout tabLayout;
-    ViewPager viewPager;
-    FloatingActionButton fab;
+    private Toolbar toolbar;
+    private TabLayout tabLayout;
+    private ViewPager viewPager;
+    private FloatingActionButton fab;
 
     private NavigationView navigationView;
     private View navHeader;
@@ -80,19 +80,74 @@ public class MainActivity extends AppCompatActivity {
     private FirebaseAuth.AuthStateListener mAuthListener;
     private FirebaseUser user;
 
-    SharedPreferences pref;
-    SharedPreferences.Editor editor;
+    private SharedPreferences pref;
+    private SharedPreferences.Editor editor;
 
     private AdView mAdView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setTheme(R.style.AppTheme);
         setContentView(R.layout.activity_main);
         toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         getSupportActionBar().setTitle("RoboGen Robotics School");
         getSupportActionBar().setSubtitle("Robotic for the Genius Generation");
+
+        pref = getApplicationContext().getSharedPreferences("session", 0);
+        editor = pref.edit();
+
+        if(pref.getString("username", null) != null) {
+            // User is signed in
+        } else {
+            // User is signed out
+            editor.clear();
+            editor.commit();
+            startActivity(new Intent(MainActivity.this, LoginActivity.class));
+            finish();
+        }
+
+        mAuth = FirebaseAuth.getInstance();
+
+        // Configure Google Sign In
+        GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                .requestIdToken(getString(R.string.default_web_client_id))
+                .requestEmail()
+                .build();
+
+        mGoogleApiClient = new GoogleApiClient.Builder(this)
+                .enableAutoManage(this , new GoogleApiClient.OnConnectionFailedListener() {
+                    @Override
+                    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
+                        Toast.makeText(MainActivity.this, "Google Play Services error", Toast.LENGTH_SHORT).show();
+                    }
+                } /* OnConnectionFailedListener */)
+                .addApi(Auth.GOOGLE_SIGN_IN_API, gso)
+                .build();
+
+        user = mAuth.getCurrentUser();
+        if (user != null) {
+            // User is signed in
+            for (UserInfo profile : user.getProviderData()) {
+                // Id of the provider (ex: google.com)
+                providerId = profile.getProviderId();
+
+                // UID specific to the provider
+                uid = profile.getUid();
+
+                // Name, email address, and profile photo Url
+                name = profile.getDisplayName();
+                email = user.getEmail();
+                photoUrl = profile.getPhotoUrl();
+
+                //Picasso.with(MainActivity.this).load(photoUrl).transform(new CircleTransform()).into(imagePhoto);
+                //textName.setText(name);
+                //textEmail.setText(email);
+            }
+        } else {
+            // User is signed out
+        }
 
         // Initialize the Mobile Ads SDK.
         MobileAds.initialize(this, "ca-app-pub-3429781998524767~6751906939");
@@ -134,15 +189,6 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
-            }
-        });
-
         viewPager = (ViewPager) findViewById(R.id.view_pager);
         setupViewPager(viewPager);
         tabLayout = (TabLayout) findViewById(R.id.tab_layout);
@@ -153,9 +199,6 @@ public class MainActivity extends AppCompatActivity {
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         drawer.addDrawerListener(toggle);
         toggle.syncState();
-
-        pref = getApplicationContext().getSharedPreferences("session", 0);
-        editor = pref.edit();
 
         navigationView = (NavigationView) findViewById(R.id.nav_view);
         setNavigationView();
@@ -174,65 +217,14 @@ public class MainActivity extends AppCompatActivity {
         textEmail.setText(pref.getString("email", null));
         Picasso.with(MainActivity.this).load("https://robogen.000webhostapp.com/codeigniter/uploads/"+pref.getString("photoUrl", null)).transform(new CircleTransform()).into(imagePhoto);
 
-        mAuth = FirebaseAuth.getInstance();
-
-        // Configure Google Sign In
-        GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                .requestIdToken(getString(R.string.default_web_client_id))
-                .requestEmail()
-                .build();
-
-        mGoogleApiClient = new GoogleApiClient.Builder(this)
-                .enableAutoManage(this , new GoogleApiClient.OnConnectionFailedListener() {
-                    @Override
-                    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
-                        Toast.makeText(MainActivity.this, "Google Play Services error", Toast.LENGTH_SHORT).show();
-                    }
-                } /* OnConnectionFailedListener */)
-                .addApi(Auth.GOOGLE_SIGN_IN_API, gso)
-                .build();
-
-        if(pref.getString("username", null) != null) {
-            // User is signed in
-        } else {
-            // User is signed out
-            editor.clear();
-            editor.commit();
-            Auth.GoogleSignInApi.signOut(mGoogleApiClient).setResultCallback(
-                    new ResultCallback<Status>() {
-                        @Override
-                        public void onResult(@NonNull Status status) {
-                        }
-                    });
-            FirebaseAuth.getInstance().signOut();
-            startActivity(new Intent(MainActivity.this, LoginActivity.class));
-            finish();
-        }
-
-        user = mAuth.getCurrentUser();
-        if (user != null) {
-            // User is signed in
-            for (UserInfo profile : user.getProviderData()) {
-                // Id of the provider (ex: google.com)
-                providerId = profile.getProviderId();
-
-                // UID specific to the provider
-                uid = profile.getUid();
-
-                // Name, email address, and profile photo Url
-                name = profile.getDisplayName();
-                email = user.getEmail();
-                photoUrl = profile.getPhotoUrl();
-
-                //Picasso.with(MainActivity.this).load(photoUrl).transform(new CircleTransform()).into(imagePhoto);
-                //textName.setText(name);
-                //textEmail.setText(email);
+        fab = (FloatingActionButton) findViewById(R.id.fab);
+        fab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
+                        .setAction("Action", null).show();
             }
-        } else {
-            // User is signed out
-            //startActivity(new Intent(MainActivity.this, LoginActivity.class));
-            //finish();
-        }
+        });
     }
 
     private void setNavigationView() {
