@@ -18,6 +18,10 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.AdSize;
+import com.google.android.gms.ads.AdView;
+import com.google.android.gms.ads.MobileAds;
 import com.rafilutfansyah.robogensiswa.R;
 import com.squareup.picasso.Picasso;
 import com.squareup.picasso.Transformation;
@@ -26,12 +30,14 @@ public class DetailRaportActivity extends AppCompatActivity {
 
     private TextView textUsername, textHari, textTanggal, textJamMasuk, textMateri, textNilaiMerakit, textNilaiMandiri, textNilaiKreativitas, textNilaiTotal, textGrade, textKeterangan;
     private ImageView imageView;
-    private String idRaport, username, materi, foto, grade, keterangan, hari, tanggal, jamMasuk;
+    private String idRaport, username, materi, urlFoto, grade, keterangan, hari, tanggal, jamMasuk;
     private int nilaiMerakit, nilaiMandiri, nilaiKreativitas;
     private Double nilaiTotal;
 
     private CollapsingToolbarLayout collapsingToolbarLayout;
     private FloatingActionButton fab;
+
+    private AdView mAdView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -65,7 +71,7 @@ public class DetailRaportActivity extends AppCompatActivity {
         tanggal = (String) bundle.get("tanggal");
         jamMasuk = (String) bundle.get("jam_masuk");
         materi = (String) bundle.get("materi");
-        foto = (String) bundle.get("foto");
+        urlFoto = (String) bundle.get("url_foto");
         nilaiMerakit = (int) bundle.getInt("nilai_merakit");
         nilaiMandiri = (int) bundle.getInt("nilai_mandiri");
         nilaiKreativitas = (int) bundle.getInt("nilai_kreativitas");
@@ -83,7 +89,7 @@ public class DetailRaportActivity extends AppCompatActivity {
         textJamMasuk.setText(": "+jamMasuk);
         textMateri.setText(": "+materi);
         Picasso.with(this) //picasso memanggil Contex class //awalan coding picasso
-                .load("https://robogen.000webhostapp.com/codeigniter/uploads/"+foto)
+                .load("https://robogen.000webhostapp.com/codeigniter/uploads/"+urlFoto)
                 .resize(720, 720)
                 .centerCrop()
                 .into(imageView);
@@ -98,26 +104,8 @@ public class DetailRaportActivity extends AppCompatActivity {
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://robogen.000webhostapp.com/codeigniter/uploads/"+foto)));
+                startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://robogen.000webhostapp.com/codeigniter/uploads/"+urlFoto)));
             }
         });
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
-        if (id == android.R.id.home) {
-
-            // finish the activity
-            onBackPressed();
-            return true;
-        }
-
-        return super.onOptionsItemSelected(item);
     }
 }

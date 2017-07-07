@@ -72,12 +72,7 @@ public class MainActivity extends AppCompatActivity {
     private ImageView imagePhoto;
     private TextView textName, textEmail;
 
-    private Uri photoUrl;
-    private String name, email, uid, providerId;
-
     private GoogleApiClient mGoogleApiClient;
-    private FirebaseAuth mAuth;
-    private FirebaseAuth.AuthStateListener mAuthListener;
     private FirebaseUser user;
 
     private SharedPreferences pref;
@@ -98,55 +93,31 @@ public class MainActivity extends AppCompatActivity {
         pref = getApplicationContext().getSharedPreferences("session", 0);
         editor = pref.edit();
 
-        if(pref.getString("username", null) != null) {
-            // User is signed in
-        } else {
-            // User is signed out
-            editor.clear();
-            editor.commit();
-            startActivity(new Intent(MainActivity.this, LoginActivity.class));
-            finish();
-        }
-
-        mAuth = FirebaseAuth.getInstance();
-
         // Configure Google Sign In
         GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
                 .requestIdToken(getString(R.string.default_web_client_id))
                 .requestEmail()
                 .build();
 
-        mGoogleApiClient = new GoogleApiClient.Builder(this)
-                .enableAutoManage(this , new GoogleApiClient.OnConnectionFailedListener() {
-                    @Override
-                    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
-                        Toast.makeText(MainActivity.this, "Google Play Services error", Toast.LENGTH_SHORT).show();
-                    }
-                } /* OnConnectionFailedListener */)
-                .addApi(Auth.GOOGLE_SIGN_IN_API, gso)
-                .build();
+        user = FirebaseAuth.getInstance().getCurrentUser();
 
-        user = mAuth.getCurrentUser();
-        if (user != null) {
+        if(pref.getString("username", null) != null) {
             // User is signed in
-            for (UserInfo profile : user.getProviderData()) {
-                // Id of the provider (ex: google.com)
-                providerId = profile.getProviderId();
-
-                // UID specific to the provider
-                uid = profile.getUid();
-
-                // Name, email address, and profile photo Url
-                name = profile.getDisplayName();
-                email = user.getEmail();
-                photoUrl = profile.getPhotoUrl();
-
-                //Picasso.with(MainActivity.this).load(photoUrl).transform(new CircleTransform()).into(imagePhoto);
-                //textName.setText(name);
-                //textEmail.setText(email);
-            }
         } else {
             // User is signed out
+            editor.clear();
+            editor.commit();
+            if (user != null) {
+                Auth.GoogleSignInApi.signOut(mGoogleApiClient).setResultCallback(
+                        new ResultCallback<Status>() {
+                            @Override
+                            public void onResult(@NonNull Status status) {
+                            }
+                        });
+                FirebaseAuth.getInstance().signOut();
+            }
+            startActivity(new Intent(MainActivity.this, LoginActivity.class));
+            finish();
         }
 
         // Initialize the Mobile Ads SDK.
@@ -162,37 +133,11 @@ public class MainActivity extends AppCompatActivity {
                 .build();
         // Start loading the ad in the background.
         mAdView.loadAd(adRequest);
-        mAdView.setAdListener(new AdListener() {
-            @Override
-            public void onAdLoaded() {
-                Toast.makeText(getApplicationContext(), "Ad is loaded!", Toast.LENGTH_SHORT).show();
-            }
-
-            @Override
-            public void onAdClosed() {
-                Toast.makeText(getApplicationContext(), "Ad is closed!", Toast.LENGTH_SHORT).show();
-            }
-
-            @Override
-            public void onAdFailedToLoad(int errorCode) {
-                Toast.makeText(getApplicationContext(), "Ad failed to load! error code: " + errorCode, Toast.LENGTH_SHORT).show();
-            }
-
-            @Override
-            public void onAdLeftApplication() {
-                Toast.makeText(getApplicationContext(), "Ad left application!", Toast.LENGTH_SHORT).show();
-            }
-
-            @Override
-            public void onAdOpened() {
-                Toast.makeText(getApplicationContext(), "Ad is opened!", Toast.LENGTH_SHORT).show();
-            }
-        });
 
         viewPager = (ViewPager) findViewById(R.id.view_pager);
         setupViewPager(viewPager);
-        tabLayout = (TabLayout) findViewById(R.id.tab_layout);
-        tabLayout.setupWithViewPager(viewPager);
+        //tabLayout = (TabLayout) findViewById(R.id.tab_layout);
+        //tabLayout.setupWithViewPager(viewPager);
 
         drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         toggle = new ActionBarDrawerToggle(
@@ -213,18 +158,18 @@ public class MainActivity extends AppCompatActivity {
                 startActivity(new Intent(MainActivity.this, ProfileActivity.class));
             }
         });
-        textName.setText(pref.getString("nama", null));
+        textName.setText(pref.getString("namaLengkap", null));
         textEmail.setText(pref.getString("email", null));
-        Picasso.with(MainActivity.this).load("https://robogen.000webhostapp.com/codeigniter/uploads/"+pref.getString("photoUrl", null)).transform(new CircleTransform()).into(imagePhoto);
+        Picasso.with(MainActivity.this).load("https://robogen.000webhostapp.com/codeigniter/uploads/"+pref.getString("urlFoto", null)).transform(new CircleTransform()).into(imagePhoto);
 
-        fab = (FloatingActionButton) findViewById(R.id.fab);
+        /* fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
                         .setAction("Action", null).show();
             }
-        });
+        }); */
     }
 
     private void setNavigationView() {
@@ -232,11 +177,19 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public boolean onNavigationItemSelected(@NonNull MenuItem item) {
                 switch (item.getItemId()) {
-                    case R.id.nav_camera:
+                    case R.id.nav_raport:
                         viewPager.setCurrentItem(0);
                         break;
-                    case R.id.nav_gallery:
+                    case R.id.nav_news:
                         viewPager.setCurrentItem(1);
+                        break;
+                    case R.id.nav_articles:
+                        viewPager.setCurrentItem(2);
+                        break;
+                    case R.id.nav_mrt:
+                        startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("http://www.myrobottime.com/")));
+                        break;
+                    case R.id.nav_pesan:
                         break;
                     case R.id.nav_send:
                         editor.clear();
@@ -250,9 +203,6 @@ public class MainActivity extends AppCompatActivity {
                         FirebaseAuth.getInstance().signOut();
                         startActivity(new Intent(MainActivity.this, LoginActivity.class));
                         finish();
-                        break;
-                    case R.id.nav_share:
-                        startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("http://www.myrobottime.com/")));
                         break;
                 }
 
@@ -308,12 +258,10 @@ public class MainActivity extends AppCompatActivity {
     private void setupViewPager(ViewPager viewPager) {
         ViewPagerAdapter adapter = new ViewPagerAdapter(getSupportFragmentManager());
         adapter.addFragment(new RaportFragment(), "Raport");
-        adapter.addFragment(new NewsFragment(),"News");
-        adapter.addFragment(new ArticlesFragment(), "Articles");
         viewPager.setAdapter(adapter);
     }
 
-    @Override
+    /* @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.main, menu);
@@ -333,5 +281,5 @@ public class MainActivity extends AppCompatActivity {
         }
 
         return super.onOptionsItemSelected(item);
-    }
+    } */
 }

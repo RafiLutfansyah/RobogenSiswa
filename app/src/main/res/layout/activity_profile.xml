@@ -22,7 +22,7 @@
             app:layout_scrollFlags="scroll|exitUntilCollapsed">
 
             <ImageView
-                android:id="@+id/image_view"
+                android:id="@+id/image_view_profile"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:scaleType="centerCrop"/>
@@ -53,8 +53,6 @@
                 android:id="@+id/ad_view"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_centerHorizontal="true"
-                android:layout_alignParentBottom="true"
                 ads:adSize="BANNER"
                 ads:adUnitId="@string/banner_ad_unit_id" />
 

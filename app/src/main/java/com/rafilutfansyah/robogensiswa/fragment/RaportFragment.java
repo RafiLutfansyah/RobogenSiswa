@@ -80,7 +80,7 @@ public class RaportFragment extends Fragment {
                         intent.putExtra("tanggal", raport.getTanggal());
                         intent.putExtra("jam_masuk", raport.getJamMasuk());
                         intent.putExtra("materi", raport.getMateri());
-                        intent.putExtra("foto", raport.getFoto());
+                        intent.putExtra("url_foto", raport.getFoto());
                         intent.putExtra("nilai_merakit", raport.getNilaiMerakit());
                         intent.putExtra("nilai_mandiri", raport.getNilaiMandiri());
                         intent.putExtra("nilai_kreativitas", raport.getNilaiKreativitas());
@@ -100,12 +100,27 @@ public class RaportFragment extends Fragment {
         SharedPreferences.Editor editor = pref.edit();
         username = pref.getString("username", null);
 
+        getData();
+
+        swipeRefresh = (SwipeRefreshLayout) view.findViewById(R.id.swipe_refresh);
+        swipeRefresh.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                getData();
+            }
+        });
+
+        return view;
+    }
+
+    private void getData() {
         RequestQueue queue = Volley.newRequestQueue(context);
         String url ="https://robogen.000webhostapp.com/API/Raport?username="+username;
         JsonArrayRequest request = new JsonArrayRequest(url,
                 new Response.Listener<JSONArray>() {
                     @Override
                     public void onResponse(JSONArray response) {
+                        raports.clear();
                         for (int i = 0; i < response.length(); i++) {
                             try {
                                 JSONObject obj = response.getJSONObject(i);
@@ -129,63 +144,16 @@ public class RaportFragment extends Fragment {
                             }
 
                         }
+                        swipeRefresh.setRefreshing(false);
                     }
                 }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
                 Toast.makeText(context, "Error!", Toast.LENGTH_SHORT).show();
+                getData();
             }
         });
         queue.add(request);
-
-        swipeRefresh = (SwipeRefreshLayout) view.findViewById(R.id.swipe_refresh);
-        swipeRefresh.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
-            @Override
-            public void onRefresh() {
-                RequestQueue queue = Volley.newRequestQueue(context);
-                String url ="https://robogen.000webhostapp.com/API/Raport?username="+username;
-                JsonArrayRequest request = new JsonArrayRequest(url,
-                        new Response.Listener<JSONArray>() {
-                            @Override
-                            public void onResponse(JSONArray response) {
-                                raports.clear();
-                                for (int i = 0; i < response.length(); i++) {
-                                    try {
-                                        JSONObject obj = response.getJSONObject(i);
-                                        Raport raport = new Raport();
-                                        raport.setIdRaport(obj.getString("id_raport"));
-                                        raport.setUsername(obj.getString("username"));
-                                        raport.setHari(obj.getString("hari_belajar"));
-                                        raport.setTanggal(obj.getString("tanggal_belajar"));
-                                        raport.setMateri(obj.getString("materi"));
-                                        raport.setFoto(obj.getString("url_foto"));
-                                        raport.setNilaiMerakit(obj.getInt("nilai_merakit"));
-                                        raport.setNilaiMandiri(obj.getInt("nilai_mandiri"));
-                                        raport.setNilaiKreativitas(obj.getInt("nilai_kreativitas"));
-                                        raport.setNilaiTotal(obj.getDouble("nilai_total"));
-                                        raport.setGrade(obj.getString("grade"));
-                                        raport.setKeterangan(obj.getString("keterangan"));
-                                        raports.add(raport);
-                                        adapter.notifyDataSetChanged();
-                                    } catch (JSONException e) {
-                                        e.printStackTrace();
-                                    }
-
-                                }
-                                swipeRefresh.setRefreshing(false);
-                            }
-                        }, new Response.ErrorListener() {
-                    @Override
-                    public void onErrorResponse(VolleyError error) {
-                        Toast.makeText(context, "Error!", Toast.LENGTH_SHORT).show();
-                        swipeRefresh.setRefreshing(false);
-                    }
-                });
-                queue.add(request);
-            }
-        });
-
-        return view;
     }
 
     public static class RecyclerItemClickListener implements RecyclerView.OnItemTouchListener {

@@ -1,22 +1,35 @@
 package com.rafilutfansyah.robogensiswa.activity;
 
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.View;
+import android.widget.ImageView;
 import android.widget.Toast;
 
 import com.google.android.gms.ads.AdListener;
 import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.AdSize;
 import com.google.android.gms.ads.AdView;
 import com.google.android.gms.ads.MobileAds;
 import com.rafilutfansyah.robogensiswa.R;
+import com.squareup.picasso.Picasso;
 
 public class ProfileActivity extends AppCompatActivity {
 
     AdView mAdView;
+
+    private ImageView imageView;
+
+    private FloatingActionButton fab;
+
+    private SharedPreferences pref;
+    private SharedPreferences.Editor editor;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -24,6 +37,17 @@ public class ProfileActivity extends AppCompatActivity {
         setContentView(R.layout.activity_profile);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+
+        pref = getApplicationContext().getSharedPreferences("session", 0);
+        editor = pref.edit();
+
+        imageView = (ImageView)findViewById(R.id.image_view_profile);
+
+        Picasso.with(this) //picasso memanggil Contex class //awalan coding picasso
+                .load("https://robogen.000webhostapp.com/codeigniter/uploads/"+pref.getString("urlFoto", null))
+                .resize(720, 720)
+                .centerCrop()
+                .into(imageView);
 
         // Initialize the Mobile Ads SDK.
         MobileAds.initialize(this, "ca-app-pub-3429781998524767~6751906939");
@@ -38,39 +62,12 @@ public class ProfileActivity extends AppCompatActivity {
                 .build();
         // Start loading the ad in the background.
         mAdView.loadAd(adRequest);
-        mAdView.setAdListener(new AdListener() {
-            @Override
-            public void onAdLoaded() {
-                Toast.makeText(getApplicationContext(), "Ad is loaded!", Toast.LENGTH_SHORT).show();
-            }
 
-            @Override
-            public void onAdClosed() {
-                Toast.makeText(getApplicationContext(), "Ad is closed!", Toast.LENGTH_SHORT).show();
-            }
-
-            @Override
-            public void onAdFailedToLoad(int errorCode) {
-                Toast.makeText(getApplicationContext(), "Ad failed to load! error code: " + errorCode, Toast.LENGTH_SHORT).show();
-            }
-
-            @Override
-            public void onAdLeftApplication() {
-                Toast.makeText(getApplicationContext(), "Ad left application!", Toast.LENGTH_SHORT).show();
-            }
-
-            @Override
-            public void onAdOpened() {
-                Toast.makeText(getApplicationContext(), "Ad is opened!", Toast.LENGTH_SHORT).show();
-            }
-        });
-
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
+        fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
+                startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://robogen.000webhostapp.com/codeigniter/uploads/"+pref.getString("url_foto", null))));
             }
         });
     }

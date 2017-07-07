@@ -62,8 +62,8 @@ public class LoginActivity extends AppCompatActivity {
     private String name, email, uid, providerId;
     private String username, password, namaLengkap, namaPanggilan, kelasRobotik, tanggalLahir, urlFoto, alamat, namaSekolah, kelasSekolah, namaAyah, namaIbu, noTelp, emailDatabase, hariBelajar, jamBelajar, tanggalMendaftar;
 
-    SharedPreferences pref;
-    SharedPreferences.Editor editor;
+    private SharedPreferences pref;
+    private SharedPreferences.Editor editor;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -80,15 +80,6 @@ public class LoginActivity extends AppCompatActivity {
 
         mAuth = FirebaseAuth.getInstance();
 
-        user = mAuth.getCurrentUser();
-        if (user != null) {
-            // User is signed in
-            startActivity(new Intent(LoginActivity.this, MainActivity.class));
-            finish();
-        } else {
-            // No user is signed in
-        }
-
         // Configure Google Sign In
         GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
                 .requestIdToken(getString(R.string.default_web_client_id))
@@ -100,8 +91,9 @@ public class LoginActivity extends AppCompatActivity {
                     @Override
                     public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
                         Toast.makeText(LoginActivity.this, "Google Play Services error", Toast.LENGTH_SHORT).show();
+                        signInButton.setEnabled(true);
                     }
-                } /* OnConnectionFailedListener */)
+                })
                 .addApi(Auth.GOOGLE_SIGN_IN_API, gso)
                 .build();
 
@@ -111,78 +103,8 @@ public class LoginActivity extends AppCompatActivity {
         buttonSignIn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                RequestQueue queue = Volley.newRequestQueue(LoginActivity.this);
-                final String url ="https://robogen.000webhostapp.com/API/siswa?username="+etUsername.getText();
-
-                JsonArrayRequest request = new JsonArrayRequest(url,
-                        new Response.Listener<JSONArray>() {
-                            @Override
-                            public void onResponse(JSONArray response) {
-                                try {
-
-                                    JSONObject obj = response.getJSONObject(0);
-
-                                    siswa.setUsername(obj.getString("username"));
-                                    siswa.setPassword(obj.getString("password"));
-                                    siswa.setNamaLengkap(obj.getString("nama_lengkap"));
-                                    siswa.setNamaPanggilan(obj.getString("nama_panggilan"));
-                                    siswa.setKelasRobotik(obj.getString("kelas_robotik"));
-                                    siswa.setTanggalLahir(obj.getString("tanggal_lahir"));
-                                    siswa.setUrlFoto(obj.getString("url_foto"));
-                                    siswa.setAlamat(obj.getString("alamat"));
-                                    siswa.setNamaSekolah(obj.getString("nama_sekolah"));
-                                    siswa.setKelasSekolah(obj.getString("kelas_sekolah"));
-                                    siswa.setNamaAyah(obj.getString("nama_ayah"));
-                                    siswa.setNamaIbu(obj.getString("nama_ibu"));
-                                    siswa.setNoTelp(obj.getString("no_telp"));
-                                    siswa.setEmail(obj.getString("email"));
-                                    siswa.setHariBelajar(obj.getString("hari_belajar"));
-                                    siswa.setJamBelajar(obj.getString("jam_belajar"));
-                                    siswa.setTanggalMendaftar(obj.getString("tanggal_mendaftar"));
-
-                                    username = siswa.getUsername();
-                                    password = siswa.getPassword();
-                                    namaLengkap = siswa.getNamaLengkap();
-                                    namaPanggilan = siswa.getNamaPanggilan();
-                                    kelasRobotik = siswa.getKelasRobotik();
-                                    tanggalLahir = siswa.getTanggalLahir();
-                                    urlFoto = siswa.getUrlFoto();
-                                    alamat = siswa.getAlamat();
-                                    namaSekolah = siswa.getNamaSekolah();
-                                    kelasSekolah = siswa.getKelasSekolah();
-                                    namaAyah = siswa.getNamaAyah();
-                                    namaIbu = siswa.getNamaIbu();
-                                    noTelp = siswa.getNoTelp();
-                                    emailDatabase = siswa.getEmail();
-                                    hariBelajar = siswa.getHariBelajar();
-                                    jamBelajar = siswa.getJamBelajar();
-                                    tanggalMendaftar = siswa.getTanggalMendaftar();
-
-                                    if(etUsername.getText().equals(username) && etPassword.getText().equals(password)) {
-                                        editor.putString("username", username);
-                                        editor.putString("email", emailDatabase);
-                                        editor.putString("nama", namaLengkap);
-                                        editor.putString("photoUrl", urlFoto);
-                                        editor.putString("password", password);
-                                        editor.commit();
-                                        startActivity(new Intent(LoginActivity.this, MainActivity.class));
-                                        finish();
-                                    } else {
-                                        Toast.makeText(LoginActivity.this, "Username & Password Salah!", Toast.LENGTH_SHORT).show();
-                                    }
-                                } catch (JSONException e) {
-                                    e.printStackTrace();
-                                }
-                            }
-                        }, new Response.ErrorListener() {
-                    @Override
-                    public void onErrorResponse(VolleyError error) {
-                        Toast.makeText(LoginActivity.this, "Gagal Login!", Toast.LENGTH_SHORT).show();
-                        editor.clear();
-                        editor.commit();
-                    }
-                });
-                queue.add(request);
+                buttonSignIn.setEnabled(false);
+                getDataUsername();
             }
         });
 
@@ -190,6 +112,7 @@ public class LoginActivity extends AppCompatActivity {
         signInButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                signInButton.setEnabled(false);
                 signIn();
             }
         });
@@ -201,7 +124,6 @@ public class LoginActivity extends AppCompatActivity {
                 if (user != null) {
                     // User is signed in
                     Log.d(TAG, "onAuthStateChanged:signed_in:" + user.getUid());
-                    //Toast.makeText(LoginActivity.this, "onAuthStateChanged:signed_in", Toast.LENGTH_SHORT).show();
 
                     for (UserInfo profile : user.getProviderData()) {
                         // Id of the provider (ex: google.com)
@@ -214,84 +136,94 @@ public class LoginActivity extends AppCompatActivity {
                         photoUrl = profile.getPhotoUrl();
                     }
 
-                    RequestQueue queue = Volley.newRequestQueue(LoginActivity.this);
-                    String url ="https://robogen.000webhostapp.com/API/Siswa/";
+                    getDataEmail();
+                } else {
+                    // User is signed out
+                    Log.d(TAG, "onAuthStateChanged:signed_out");
+                }
+                // ...
+            }
+        };
+        // ...
+    }
 
-                    JsonArrayRequest request = new JsonArrayRequest(url,
-                            new Response.Listener<JSONArray>() {
-                                @Override
-                                public void onResponse(JSONArray response) {
-                                    for(int i=0; i<response.length(); i++) {
-                                        try {
+    private void getDataEmail() {
+        RequestQueue queue = Volley.newRequestQueue(LoginActivity.this);
+        String url ="https://robogen.000webhostapp.com/API/Siswa/";
 
-                                            JSONObject obj = response.getJSONObject(i);
+        JsonArrayRequest request = new JsonArrayRequest(url,
+                new Response.Listener<JSONArray>() {
+                    @Override
+                    public void onResponse(JSONArray response) {
+                        for(int i=0; i<response.length(); i++) {
+                            try {
 
-                                            siswa.setUsername(obj.getString("username"));
-                                            siswa.setPassword(obj.getString("password"));
-                                            siswa.setNamaLengkap(obj.getString("nama_lengkap"));
-                                            siswa.setNamaPanggilan(obj.getString("nama_panggilan"));
-                                            siswa.setKelasRobotik(obj.getString("kelas_robotik"));
-                                            siswa.setTanggalLahir(obj.getString("tanggal_lahir"));
-                                            siswa.setUrlFoto(obj.getString("url_foto"));
-                                            siswa.setAlamat(obj.getString("alamat"));
-                                            siswa.setNamaSekolah(obj.getString("nama_sekolah"));
-                                            siswa.setKelasSekolah(obj.getString("kelas_sekolah"));
-                                            siswa.setNamaAyah(obj.getString("nama_ayah"));
-                                            siswa.setNamaIbu(obj.getString("nama_ibu"));
-                                            siswa.setNoTelp(obj.getString("no_telp"));
-                                            siswa.setEmail(obj.getString("email"));
-                                            siswa.setHariBelajar(obj.getString("hari_belajar"));
-                                            siswa.setJamBelajar(obj.getString("jam_belajar"));
-                                            siswa.setTanggalMendaftar(obj.getString("tanggal_mendaftar"));
+                                JSONObject obj = response.getJSONObject(i);
 
-                                            username = siswa.getUsername();
-                                            password = siswa.getPassword();
-                                            namaLengkap = siswa.getNamaLengkap();
-                                            namaPanggilan = siswa.getNamaPanggilan();
-                                            kelasRobotik = siswa.getKelasRobotik();
-                                            tanggalLahir = siswa.getTanggalLahir();
-                                            urlFoto = siswa.getUrlFoto();
-                                            alamat = siswa.getAlamat();
-                                            namaSekolah = siswa.getNamaSekolah();
-                                            kelasSekolah = siswa.getKelasSekolah();
-                                            namaAyah = siswa.getNamaAyah();
-                                            namaIbu = siswa.getNamaIbu();
-                                            noTelp = siswa.getNoTelp();
-                                            emailDatabase = siswa.getEmail();
-                                            hariBelajar = siswa.getHariBelajar();
-                                            jamBelajar = siswa.getJamBelajar();
-                                            tanggalMendaftar = siswa.getTanggalMendaftar();
+                                siswa.setUsername(obj.getString("username"));
+                                siswa.setPassword(obj.getString("password"));
+                                siswa.setNamaLengkap(obj.getString("nama_lengkap"));
+                                siswa.setNamaPanggilan(obj.getString("nama_panggilan"));
+                                siswa.setKelasRobotik(obj.getString("kelas_robotik"));
+                                siswa.setTanggalLahir(obj.getString("tanggal_lahir"));
+                                siswa.setUrlFoto(obj.getString("url_foto"));
+                                siswa.setAlamat(obj.getString("alamat"));
+                                siswa.setNamaSekolah(obj.getString("nama_sekolah"));
+                                siswa.setKelasSekolah(obj.getString("kelas_sekolah"));
+                                siswa.setNamaAyah(obj.getString("nama_ayah"));
+                                siswa.setNamaIbu(obj.getString("nama_ibu"));
+                                siswa.setNoTelp(obj.getString("no_telp"));
+                                siswa.setEmail(obj.getString("email"));
+                                siswa.setHariBelajar(obj.getString("hari_belajar"));
+                                siswa.setJamBelajar(obj.getString("jam_belajar"));
+                                siswa.setTanggalMendaftar(obj.getString("tanggal_mendaftar"));
 
-                                            if(email.equals(emailDatabase)) {
-                                                editor.putString("username", username);
-                                                editor.putString("email", emailDatabase);
-                                                editor.putString("nama", namaLengkap);
-                                                editor.putString("photoUrl", urlFoto);
-                                                editor.putString("password", password);
-                                                editor.commit();
-                                                startActivity(new Intent(LoginActivity.this, MainActivity.class));
-                                                finish();
-                                            }
-                                        } catch (JSONException e) {
-                                            e.printStackTrace();
-                                        }
-                                    }
-                                    if(!email.equals(emailDatabase)) {
-                                        editor.clear();
-                                        editor.commit();
-                                        Auth.GoogleSignInApi.signOut(mGoogleApiClient).setResultCallback(
-                                                new ResultCallback<Status>() {
-                                                    @Override
-                                                    public void onResult(@NonNull Status status) {
-                                                    }
-                                                });
-                                        FirebaseAuth.getInstance().signOut();
-                                    }
+                                username = siswa.getUsername();
+                                password = siswa.getPassword();
+                                namaLengkap = siswa.getNamaLengkap();
+                                namaPanggilan = siswa.getNamaPanggilan();
+                                kelasRobotik = siswa.getKelasRobotik();
+                                tanggalLahir = siswa.getTanggalLahir();
+                                urlFoto = siswa.getUrlFoto();
+                                alamat = siswa.getAlamat();
+                                namaSekolah = siswa.getNamaSekolah();
+                                kelasSekolah = siswa.getKelasSekolah();
+                                namaAyah = siswa.getNamaAyah();
+                                namaIbu = siswa.getNamaIbu();
+                                noTelp = siswa.getNoTelp();
+                                emailDatabase = siswa.getEmail();
+                                hariBelajar = siswa.getHariBelajar();
+                                jamBelajar = siswa.getJamBelajar();
+                                tanggalMendaftar = siswa.getTanggalMendaftar();
+
+                                if(email.equals(emailDatabase)) {
+                                    editor.putString("username", username);
+                                    editor.putString("password", password);
+                                    editor.putString("namaLengkap", namaLengkap);
+                                    editor.putString("namaPanggilan", namaPanggilan);
+                                    editor.putString("kelasRobotik", kelasRobotik);
+                                    editor.putString("tanggalLahir", tanggalLahir);
+                                    editor.putString("urlFoto", urlFoto);
+                                    editor.putString("alamat", alamat);
+                                    editor.putString("namaSekolah", namaSekolah);
+                                    editor.putString("kelasSekolah", kelasSekolah);
+                                    editor.putString("namaAyah", namaAyah);
+                                    editor.putString("namaIbu", namaIbu);
+                                    editor.putString("noTelp", noTelp);
+                                    editor.putString("email", emailDatabase);
+                                    editor.putString("hariBelajar", hariBelajar);
+                                    editor.putString("jamBelajar", jamBelajar);
+                                    editor.putString("tanggalMendaftar", tanggalMendaftar);
+                                    editor.commit();
+                                    startActivity(new Intent(LoginActivity.this, MainActivity.class));
+                                    finish();
                                 }
-                            }, new Response.ErrorListener() {
-                        @Override
-                        public void onErrorResponse(VolleyError error) {
-                            Toast.makeText(LoginActivity.this, "Gagal Login!", Toast.LENGTH_SHORT).show();
+                            } catch (JSONException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                        if(!email.equals(emailDatabase)) {
+                            signInButton.setEnabled(true);
                             editor.clear();
                             editor.commit();
                             Auth.GoogleSignInApi.signOut(mGoogleApiClient).setResultCallback(
@@ -302,16 +234,101 @@ public class LoginActivity extends AppCompatActivity {
                                     });
                             FirebaseAuth.getInstance().signOut();
                         }
-                    });
-                    queue.add(request);
-                } else {
-                    // User is signed out
-                    Log.d(TAG, "onAuthStateChanged:signed_out");
-                    //Toast.makeText(LoginActivity.this, "onAuthStateChanged:signed_out", Toast.LENGTH_SHORT).show();
-                }
-                // ...
+                    }
+                }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                getDataEmail();
             }
-        };
+        });
+        queue.add(request);
+    }
+
+    private void getDataUsername() {
+        RequestQueue queue = Volley.newRequestQueue(LoginActivity.this);
+        String url ="https://robogen.000webhostapp.com/API/siswa?username="+etUsername.getText();
+
+        JsonArrayRequest request = new JsonArrayRequest(url,
+                new Response.Listener<JSONArray>() {
+                    @Override
+                    public void onResponse(JSONArray response) {
+                        try {
+                            JSONObject obj = response.getJSONObject(0);
+
+                            siswa.setUsername(obj.getString("username"));
+                            siswa.setPassword(obj.getString("password"));
+                            siswa.setNamaLengkap(obj.getString("nama_lengkap"));
+                            siswa.setNamaPanggilan(obj.getString("nama_panggilan"));
+                            siswa.setKelasRobotik(obj.getString("kelas_robotik"));
+                            siswa.setTanggalLahir(obj.getString("tanggal_lahir"));
+                            siswa.setUrlFoto(obj.getString("url_foto"));
+                            siswa.setAlamat(obj.getString("alamat"));
+                            siswa.setNamaSekolah(obj.getString("nama_sekolah"));
+                            siswa.setKelasSekolah(obj.getString("kelas_sekolah"));
+                            siswa.setNamaAyah(obj.getString("nama_ayah"));
+                            siswa.setNamaIbu(obj.getString("nama_ibu"));
+                            siswa.setNoTelp(obj.getString("no_telp"));
+                            siswa.setEmail(obj.getString("email"));
+                            siswa.setHariBelajar(obj.getString("hari_belajar"));
+                            siswa.setJamBelajar(obj.getString("jam_belajar"));
+                            siswa.setTanggalMendaftar(obj.getString("tanggal_mendaftar"));
+
+                            username = siswa.getUsername();
+                            password = siswa.getPassword();
+                            namaLengkap = siswa.getNamaLengkap();
+                            namaPanggilan = siswa.getNamaPanggilan();
+                            kelasRobotik = siswa.getKelasRobotik();
+                            tanggalLahir = siswa.getTanggalLahir();
+                            urlFoto = siswa.getUrlFoto();
+                            alamat = siswa.getAlamat();
+                            namaSekolah = siswa.getNamaSekolah();
+                            kelasSekolah = siswa.getKelasSekolah();
+                            namaAyah = siswa.getNamaAyah();
+                            namaIbu = siswa.getNamaIbu();
+                            noTelp = siswa.getNoTelp();
+                            emailDatabase = siswa.getEmail();
+                            hariBelajar = siswa.getHariBelajar();
+                            jamBelajar = siswa.getJamBelajar();
+                            tanggalMendaftar = siswa.getTanggalMendaftar();
+
+                            if(etUsername.getText().toString().equals(username) && etPassword.getText().toString().equals(password)) {
+                                editor.putString("username", username);
+                                editor.putString("password", password);
+                                editor.putString("namaLengkap", namaLengkap);
+                                editor.putString("namaPanggilan", namaPanggilan);
+                                editor.putString("kelasRobotik", kelasRobotik);
+                                editor.putString("tanggalLahir", tanggalLahir);
+                                editor.putString("urlFoto", urlFoto);
+                                editor.putString("alamat", alamat);
+                                editor.putString("namaSekolah", namaSekolah);
+                                editor.putString("kelasSekolah", kelasSekolah);
+                                editor.putString("namaAyah", namaAyah);
+                                editor.putString("namaIbu", namaIbu);
+                                editor.putString("noTelp", noTelp);
+                                editor.putString("email", emailDatabase);
+                                editor.putString("hariBelajar", hariBelajar);
+                                editor.putString("jamBelajar", jamBelajar);
+                                editor.putString("tanggalMendaftar", tanggalMendaftar);
+                                editor.commit();
+                                startActivity(new Intent(LoginActivity.this, MainActivity.class));
+                                finish();
+                            } else {
+                                Toast.makeText(LoginActivity.this, "Username / Password Salah!", Toast.LENGTH_LONG).show();
+                                editor.clear();
+                                editor.commit();
+                                buttonSignIn.setEnabled(true);
+                            }
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                getDataUsername();
+            }
+        });
+        queue.add(request);
     }
 
     private void signIn() {
@@ -328,13 +345,13 @@ public class LoginActivity extends AppCompatActivity {
             GoogleSignInResult result = Auth.GoogleSignInApi.getSignInResultFromIntent(data);
             if (result.isSuccess()) {
                 // Google Sign In was successful, authenticate with Firebase
-                //Toast.makeText(LoginActivity.this, "Google Sign In was successful, authenticate with Firebase", Toast.LENGTH_SHORT).show();
                 GoogleSignInAccount account = result.getSignInAccount();
                 firebaseAuthWithGoogle(account);
             } else {
                 // Google Sign In failed, update UI appropriately
                 // ...
                 Toast.makeText(LoginActivity.this, "Google Sign In failed", Toast.LENGTH_SHORT).show();
+                signInButton.setEnabled(true);
             }
         }
     }
@@ -370,6 +387,7 @@ public class LoginActivity extends AppCompatActivity {
                             Log.w(TAG, "signInWithCredential", task.getException());
                             Toast.makeText(LoginActivity.this, "Authentication failed.",
                                     Toast.LENGTH_SHORT).show();
+                            signInButton.setEnabled(true);
                         }
                         // ...
                     }
